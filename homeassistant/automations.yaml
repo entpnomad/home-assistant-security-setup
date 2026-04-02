@@ -1,0 +1,73 @@
+- id: frigate_person_detected_all_cameras
+  alias: Frigate - Person Detected (Discord)
+  description: Send Discord notification with snapshot when Frigate detects a person
+  mode: parallel
+  max: 4
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.camera_1_person_occupancy
+    - binary_sensor.camera_2_person_occupancy
+    to: "on"
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ trigger.entity_id == 'binary_sensor.camera_1_person_occupancy' }}"
+      sequence:
+      - action: shell_command.discord_alert_camera_1
+    - conditions:
+      - condition: template
+        value_template: "{{ trigger.entity_id == 'binary_sensor.camera_2_person_occupancy' }}"
+      sequence:
+      - action: shell_command.discord_alert_camera_2
+
+- id: detection_counter_increment
+  alias: Detection Counter - Increment on Person Detection
+  description: Increment the appropriate camera counter on each person detection
+  mode: parallel
+  max: 4
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.camera_1_person_occupancy
+        - binary_sensor.camera_2_person_occupancy
+      to: "on"
+  actions:
+    - action: counter.increment
+      target:
+        entity_id: >-
+          {{ 'counter.detections_' ~ (trigger.entity_id | replace('binary_sensor.', '') | replace('_person_occupancy', '')) }}
+
+- id: daily_security_digest
+  alias: Daily Security Digest
+  description: Send morning Discord summary of security activity
+  mode: single
+  triggers:
+    - trigger: time
+      at: input_datetime.daily_digest_time
+  conditions:
+    - condition: state
+      entity_id: input_boolean.daily_digest_enabled
+      state: "on"
+  actions:
+    - action: rest_command.discord_notify
+      data:
+        message: |-
+          **Daily Security Digest**
+
+          **Detections (since last digest):**
+          - Camera 1: {{ states('counter.detections_camera_1') }}
+          - Camera 2: {{ states('counter.detections_camera_2') }}
+
+          **Lock & Door:**
+          Lock: {{ 'Locked' if is_state('lock.front_door', 'locked') else 'UNLOCKED' }}
+          Door: {{ 'Closed' if is_state('binary_sensor.front_door_sensor', 'off') else 'OPEN' }}
+
+          **Battery:** {{ states('sensor.front_door_battery') }}%{{ ' - LOW BATTERY' if states('sensor.front_door_battery') | int < 20 else '' }}
+    - action: counter.reset
+      target:
+        entity_id:
+          - counter.detections_camera_1
+          - counter.detections_camera_2

@@ -1,0 +1,65 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# Discord alerts: instant detect-resolution snapshot, then HD follow-up via go2rtc.
+# NOTE: !secret does NOT work inside shell_command strings. Hardcode the webhook URL
+# on the device, use <DISCORD_WEBHOOK_URL> as placeholder in version control.
+shell_command:
+  discord_alert_camera_1: 'curl -s -o /tmp/camera_1_lr.jpg "http://ccab4aaf-frigate-fa:5000/api/camera_1/latest.jpg" && curl -s -X POST "<DISCORD_WEBHOOK_URL>" -F "payload_json={\"content\":\"Person detected on **Camera 1**\"}" -F "file=@/tmp/camera_1_lr.jpg"; curl -s -o /tmp/camera_1_hd.jpg --max-time 15 "http://ccab4aaf-frigate-fa:1984/api/frame.jpeg?src=camera_1_hd" && curl -s -X POST "<DISCORD_WEBHOOK_URL>" -F "payload_json={\"content\":\"**Camera 1** - HD snapshot\"}" -F "file=@/tmp/camera_1_hd.jpg"'
+  discord_alert_camera_2: 'curl -s -o /tmp/camera_2_lr.jpg "http://ccab4aaf-frigate-fa:5000/api/camera_2/latest.jpg" && curl -s -X POST "<DISCORD_WEBHOOK_URL>" -F "payload_json={\"content\":\"Person detected on **Camera 2**\"}" -F "file=@/tmp/camera_2_lr.jpg"; curl -s -o /tmp/camera_2_hd.jpg --max-time 15 "http://ccab4aaf-frigate-fa:1984/api/frame.jpeg?src=camera_2_hd" && curl -s -X POST "<DISCORD_WEBHOOK_URL>" -F "payload_json={\"content\":\"**Camera 2** - HD snapshot\"}" -F "file=@/tmp/camera_2_hd.jpg"'
+  enforce_privacy: 'python3 /homeassistant/scripts/enforce_privacy.py'
+
+# Templated Discord text notifications (for daily digest, etc.)
+rest_command:
+  discord_notify:
+    url: !secret discord_webhook
+    method: POST
+    headers:
+      Content-Type: "application/json"
+    payload: '{"content": {{ (message | default("No message provided")) | to_json }}}'
+    content_type: "application/json"
+
+input_boolean:
+  daily_digest_enabled:
+    name: Daily Digest Enabled
+    icon: mdi:email-newsletter
+    initial: true
+
+  camera_1_privacy_enforcer:
+    name: Camera 1 Privacy Enforcer
+    icon: mdi:camera-off
+    initial: false
+
+  camera_2_privacy_enforcer:
+    name: Camera 2 Privacy Enforcer
+    icon: mdi:camera-off
+    initial: false
+
+input_datetime:
+  daily_digest_time:
+    name: Daily Digest Time
+    has_date: false
+    has_time: true
+    initial: "08:00"
+    icon: mdi:clock-outline
+
+counter:
+  detections_camera_1:
+    name: Detections - Camera 1
+    initial: 0
+    step: 1
+    icon: mdi:camera
+
+  detections_camera_2:
+    name: Detections - Camera 2
+    initial: 0
+    step: 1
+    icon: mdi:camera

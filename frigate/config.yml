@@ -1,0 +1,76 @@
+go2rtc:
+  streams:
+    camera_1_hd:
+      - rtsp://<TAPO_USER>:<TAPO_PASS>@<CAMERA_1_IP>:554/stream1
+    camera_2_hd:
+      - rtsp://<TAPO_USER>:<TAPO_PASS>@<CAMERA_2_IP>:554/stream1
+mqtt:
+  enabled: true
+  host: core-mosquitto
+  port: 1883
+  user: <MQTT_USER>
+  password: <MQTT_PASSWORD>
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+ffmpeg:
+  input_args: preset-rtsp-generic
+record:
+  enabled: true
+  retain:
+    days: 0
+    mode: active_objects
+  detections:
+    retain:
+      days: 14
+      mode: active_objects
+cameras:
+  camera_1:
+    ffmpeg:
+      inputs:
+      - path: rtsp://<TAPO_USER>:<TAPO_PASS>@<CAMERA_1_IP>:554/stream2
+        roles:
+        - detect
+      - path: rtsp://<TAPO_USER>:<TAPO_PASS>@<CAMERA_1_IP>:554/stream1
+        roles:
+        - record
+    detect:
+      width: 640
+      height: 360
+      fps: 2
+    motion:
+      mask:
+      - 0,0,0.355,0,0.356,0.045,0,0.045
+    objects:
+      track:
+      - person
+    snapshots:
+      enabled: true
+      retain:
+        default: 14
+  camera_2:
+    ffmpeg:
+      inputs:
+      - path: rtsp://<TAPO_USER>:<TAPO_PASS>@<CAMERA_2_IP>:554/stream2
+        roles:
+        - detect
+      - path: rtsp://<TAPO_USER>:<TAPO_PASS>@<CAMERA_2_IP>:554/stream1
+        roles:
+        - record
+    detect:
+      width: 640
+      height: 360
+      fps: 2
+    motion:
+      mask:
+      - 0,0,0.355,0,0.356,0.045,0,0.045
+    objects:
+      track:
+      - person
+    snapshots:
+      enabled: true
+      retain:
+        default: 14
+detect:
+  enabled: true
