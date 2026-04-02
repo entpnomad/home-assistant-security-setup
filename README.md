@@ -2,7 +2,9 @@
 
 Full configuration for a self-hosted security system using Home Assistant Green, Frigate NVR, Tapo cameras, Nuki smart lock, and Discord alerts. Zero subscriptions, zero cloud dependency. Runs unattended for months.
 
-Blog post: [Self-hosted home security for multiple properties](https://founders.do/posts/self-hosted-home-security/)
+**This entire setup was built by [Claude Code](https://claude.ai/code)** via SSH - from addon installation to config writing to deployment. The included [`CLAUDE.md`](CLAUDE.md) gives Claude Code everything it needs to manage the system: SSH access, file paths, Supervisor API commands, and push/pull workflows. Point Claude Code at this repo and describe what you want.
+
+Blog post: [Self-hosted home security for multiple properties, set up entirely by Claude Code](https://founders.do/posts/self-hosted-home-security/)
 
 ## Architecture
 
@@ -174,6 +176,7 @@ Discord notification on every recovery action. Prevents reboot loops.
 ```
 home-assistant-security-setup/
 ├── README.md
+├── CLAUDE.md                   # Project context for Claude Code (SSH, API, file paths)
 ├── LICENSE
 ├── homeassistant/
 │   ├── configuration.yaml      # Shell commands, input booleans, counters, rest commands
